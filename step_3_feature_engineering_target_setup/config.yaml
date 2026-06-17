@@ -1,0 +1,59 @@
+# =============================================================================
+# BagrutProject — Step 3 Configuration (Feature Engineering & Target Setup)
+# Project: Predicting Israeli High School Bagrut Success Using Socioeconomic Data
+# Authors: Yousef Shehade & Shada Esawi
+#
+# Self-contained STEP folder. Paths are relative to THIS folder; each code/
+# module resolves them from its own location, so scripts run from any CWD.
+# Step 3 consumes Step 2's merged master table and re-grains it to SCHOOL level.
+# =============================================================================
+
+project:
+  title: "Predicting Israeli High School Bagrut Success Using Socioeconomic Data"
+  authors:
+    - "Yousef Shehade"
+    - "Shada Esawi"
+
+seed: 42
+
+paths:
+  merged_in:        "../step_2_data_merging_integration/data/merged_bagrut_ses.csv"
+  out_data:         "data"
+  out_graphs:       "graphs"
+  school_level_out: "data/school_level_features_targets.csv"
+
+io:
+  encoding: "utf-8-sig"
+
+# Modeling grain — one row per school per year. Chosen over school-only because
+# it ~quadruples sample volume and preserves year-over-year structure (and keeps
+# the door open for the optional Trajectory Analysis method later). The school id
+# (`semel`) is retained so modeling can use GroupKFold(semel) to avoid leakage.
+grain: ["semel", "year"]
+
+subjects:
+  core:
+    math:    "מתמטיקה"
+    english: "אנגלית"
+  # Academic-track study-unit levels used as the participation-rate denominator.
+  participation_units: [3, 4, 5]
+  # The "advanced track" == the 5-unit exam (participation numerator).
+  advanced_units: 5
+
+# CBS socioeconomic predictors carried onto each school row (constant per semel).
+# NOTE: district / מחוז is NOT present in the downloaded CBS extract, so it is
+# documented as unavailable rather than fabricated. locality_form (צורת יישוב)
+# is the CBS settlement-type code and is retained as an extra structural feature.
+cbs_features:
+  - "cluster"
+  - "index_value"
+  - "population"
+  - "locality_form"
+  - "ses_locality_name"
+
+# Identifier / bookkeeping columns kept for interpretability and quality filtering.
+id_columns:
+  - "school"
+  - "city"
+  - "city_norm"
+  - "match_stage"
