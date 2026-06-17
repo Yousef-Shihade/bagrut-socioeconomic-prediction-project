@@ -73,7 +73,7 @@ def plot_leaderboard(leaderboards: dict[str, pd.DataFrame], out_dir: Path) -> Pa
     ax.set_xticklabels([t.replace("_", "\n") for t in long["target"].unique()], fontsize=11)
     ax.legend(title="Model", fontsize=10, loc="upper right")
     plt.tight_layout()
-    path = out_dir / "model_leaderboard.png"
+    path = out_dir / "models_performance.png"
     fig.savefig(path, dpi=150, bbox_inches="tight")
     plt.close(fig)
     return path

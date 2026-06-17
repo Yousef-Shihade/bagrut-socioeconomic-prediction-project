@@ -25,7 +25,7 @@ step_5_predictive_modeling_explainability/
 │   ├── explain.py            # SHAP beeswarms + leaderboard plot
 │   └── run_step5.py          # orchestrator + console report
 ├── models/                   # 4 serialized tuned HGB models + leaderboard_cv.csv
-└── graphs/                   # 4 SHAP beeswarms + model_leaderboard.png
+└── graphs/                   # 4 SHAP beeswarms + models_performance.png
 ```
 
 Run: `python code/run_step5.py`.
@@ -90,7 +90,7 @@ In every case the 12 settlement-type dummies are rejected as noise.
 | `math_avg_grade` | 0.094 | 7.188 | 5.600 |
 | `math_5unit_participation` | 0.056 | 0.101 | 0.080 |
 
-### Full tournament (untuned CV R², `graphs/model_leaderboard.png`)
+### Full tournament (untuned CV R², `graphs/models_performance.png`)
 
 | Model | math_grade | eng_grade | math_5u | eng_5u |
 |---|--:|--:|--:|--:|

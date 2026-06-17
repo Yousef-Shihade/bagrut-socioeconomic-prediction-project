@@ -140,7 +140,7 @@ and they funnel ~2.6–2.7× more pupils into advanced Math & English tracks.
 
 **Cross-validated model leaderboard** — R² by model across the four targets.
 
-![Model leaderboard](step_5_predictive_modeling_explainability/graphs/model_leaderboard.png)
+![Model leaderboard](step_5_predictive_modeling_explainability/graphs/models_performance.png)
 
 ---
 
