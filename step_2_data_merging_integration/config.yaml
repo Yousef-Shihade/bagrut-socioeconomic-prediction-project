@@ -1,0 +1,52 @@
+# =============================================================================
+# BagrutProject — Step 2 Configuration (Data Merging & Integration)
+# Project: Predicting Israeli High School Bagrut Success Using Socioeconomic Data
+# Authors: Yousef Shehade & Shada Esawi
+#
+# Self-contained STEP folder. Paths are relative to THIS folder (the one holding
+# this config.yaml); each code/ module resolves them from its own location, so
+# scripts run from any working directory. Step 2 consumes the cleaned caches
+# produced by Step 1 (one level up) and writes its own outputs here.
+# =============================================================================
+
+project:
+  title: "Predicting Israeli High School Bagrut Success Using Socioeconomic Data"
+  authors:
+    - "Yousef Shehade"
+    - "Shada Esawi"
+
+seed: 42
+
+paths:
+  # Inputs — Step 1 clean caches (shared, read-only).
+  bagrut_clean: "../step_1_ingestion_standardization/data/bagrut_clean.csv"
+  ses_clean:    "../step_1_ingestion_standardization/data/ses_clean.csv"
+  # Outputs — this step.
+  out_data:     "data"
+  out_graphs:   "graphs"
+  merged_out:   "data/merged_bagrut_ses.csv"
+  mapping_out:  "data/city_mapping_log.csv"   # full audit log of every city -> SES decision
+
+io:
+  encoding: "utf-8-sig"
+
+matching:
+  bagrut_key: "city_norm"        # normalised locality key on the Bagrut side
+  ses_key:    "locality_norm"    # normalised locality key on the CBS side
+  ses_code:   "locality_code"    # CBS locality symbol (used as the join id)
+  # When several CBS localities share a normalised name (e.g. a large city and a
+  # tiny same-named moshav), keep the one with the largest population.
+  ses_dedup_by: "population"
+  # Stage 3 fuzzy alignment — conservative settings to avoid false positives.
+  fuzzy_threshold: 90            # token_sort_ratio score in [0, 100]
+  fuzzy_scorer: "token_sort_ratio"
+  fuzzy_min_len_ratio: 0.6       # reject matches where the shorter/longer length ratio < this
+
+# CBS feature columns carried into the merged dataset.
+ses_feature_columns:
+  - "locality_code"
+  - "locality_name"
+  - "locality_form"
+  - "population"
+  - "index_value"
+  - "cluster"
