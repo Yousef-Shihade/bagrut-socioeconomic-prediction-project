@@ -1,0 +1,72 @@
+# =============================================================================
+# BagrutProject — Step 5 Configuration
+# High-Performance Predictive Modeling & Explainability
+# Project: Predicting Israeli High School Bagrut Success Using Socioeconomic Data
+# Authors: Yousef Shehade & Shada Esawi
+#
+# Built to the Presentation 3+4 rubric: feature selection (+ rationale/results),
+# collinearity handling, normalisation, ≥1 tuned model with CV, and feature
+# importance (SHAP). CV uses GroupKFold(semel) to stop a school's multiple years
+# leaking across train/test folds.
+# =============================================================================
+
+project:
+  title: "Predicting Israeli High School Bagrut Success Using Socioeconomic Data"
+  authors:
+    - "Yousef Shehade"
+    - "Shada Esawi"
+
+seed: 42
+
+paths:
+  cleaned_in:  "../step_4_preprocessing_outliers_imputation_experiment/data/cleaned_modeling_ready.csv"
+  out_models:  "models"
+  out_graphs:  "graphs"
+  leaderboard_out: "models/leaderboard_cv.csv"
+
+io:
+  encoding: "utf-8-sig"
+
+# --- The four prediction targets (all regression) ---------------------------
+targets:
+  - "math_avg_grade"
+  - "english_avg_grade"
+  - "math_5unit_participation"
+  - "english_5unit_participation"
+
+# --- Predictors (strictly municipal / socioeconomic, per the research question)
+features:
+  group_col: "semel"            # GroupKFold groups (a school's rows stay together)
+  # Numeric candidates kept after collinearity handling (see collinearity block).
+  numeric: ["cluster", "log_population", "year"]
+  # Low-cardinality CBS settlement-type code -> one-hot encoded.
+  categorical: ["locality_form"]
+  # Exclude the 35 consensus outliers flagged in Step 4 from the modeling set.
+  exclude_outlier_flag: "outlier_consensus"
+
+collinearity:
+  # cluster and index_value are near-duplicates (Pearson r = 0.973). We report VIF
+  # on this numeric set, then DROP index_value and keep `cluster` (the headline,
+  # interpretable 1-10 SES variable) for all downstream models.
+  vif_features: ["cluster", "index_value", "log_population", "year"]
+  drop_for_collinearity: ["index_value"]
+  vif_threshold: 5.0
+
+# --- Feature selection (Boruta) ---------------------------------------------
+feature_selection:
+  method: "boruta"
+  boruta_max_iter: 100
+  boruta_estimators: 200
+  # perc=100 (vs the MAX shadow) is very strict and confirms nothing on this
+  # weak-but-real SES signal; perc=90 (vs the 90th-pct shadow) is the standard
+  # relaxation and cleanly confirms cluster/population while rejecting the 12
+  # sparse settlement-type dummies.
+  boruta_perc: 90
+
+# --- Modeling tournament -----------------------------------------------------
+modeling:
+  cv_splits: 5
+  # Champion family that is tuned with RandomizedSearchCV.
+  champion: "hist_gradient_boosting"
+  tuning_iter: 25
+  shap_sample: 1500             # rows sampled for SHAP beeswarm (speed/clarity)
