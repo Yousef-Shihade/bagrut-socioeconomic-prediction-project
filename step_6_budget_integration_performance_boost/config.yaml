@@ -1,0 +1,72 @@
+# =============================================================================
+# BagrutProject — Step 6 Configuration
+# Institutional Budget Integration & Performance Boost
+# Project: Predicting Israeli High School Bagrut Success Using Socioeconomic Data
+# Authors: Yousef Shehade & Shada Esawi
+#
+# Step 6 bolts a THIRD dataset (Ministry of Education school-budget report) onto
+# the finalized Step-4 modeling table, joining strictly on the school code
+# (`semel`). It engineers `budget_per_student` and re-runs the exact Step-5
+# GroupKFold tournament to test whether institutional resourcing breaks the
+# municipal-SES predictive ceiling discovered in Step 5.
+# =============================================================================
+
+project:
+  title: "Predicting Israeli High School Bagrut Success Using Socioeconomic Data"
+  authors:
+    - "Yousef Shehade"
+    - "Shada Esawi"
+
+seed: 42
+
+paths:
+  cleaned_in:  "../step_4_preprocessing_outliers_imputation_experiment/data/cleaned_modeling_ready.csv"
+  budget_xlsx: "../datasets/school_budget.xlsx"
+  step5_leaderboard: "../step_5_predictive_modeling_explainability/models/leaderboard_cv.csv"
+  consolidated_out: "data/consolidated_3dataset_matrix.csv"
+  out_models:  "models"
+  out_graphs_understanding: "graphs/dataset_understanding"
+  out_graphs_performance:   "graphs/model_performance"
+  leaderboard_out: "models/leaderboard_step6_cv.csv"
+  comparison_out:  "models/before_after_comparison.csv"
+
+io:
+  encoding: "utf-8-sig"
+  budget_sheet: "MyWorkSheet-1"
+
+# --- Budget-file column map (Hebrew headers; whitespace-normalised in code) ---
+# DUAL-BUDGET strategy: the empty Gefen column is dropped entirely. We use the
+# comprehensive grand-total budget (98.3% nonzero coverage) AND the specific
+# instructional teaching cost (49% coverage but a distinct, un-diluted signal
+# that uniquely lifts 5-unit Math participation). The two are near-orthogonal to
+# the SES cluster, so they add genuinely new information.
+budget_columns:
+  semel:    "סמל מוסד"                              # School Semel Code
+  grand_total: 'סה"כ תקציב שכר ותשלומים'           # col 51 — comprehensive budget
+  teaching_cost: "עלות שעות הוראה"                  # col 20 — instructional teaching cost
+  students: "מספר תלמידים בפועל חינוך רגיל"         # actual regular-ed students
+  totals_label: 'סה"כ'                              # grand-totals row to drop
+
+# --- The four prediction targets (identical to Step 5) ----------------------
+targets:
+  - "math_avg_grade"
+  - "english_avg_grade"
+  - "math_5unit_participation"
+  - "english_5unit_participation"
+
+# --- Feature space ----------------------------------------------------------
+features:
+  group_col: "semel"                       # GroupKFold groups (school-level)
+  # Step-5 municipal/socioeconomic baseline predictors (the "before" set).
+  base_numeric: ["cluster", "log_population", "year"]
+  categorical: ["locality_form"]           # one-hot CBS settlement-type code
+  # The NEW institutional features added in Step 6 (after set = base + these two).
+  budget_numeric: ["total_budget_per_student", "teaching_budget_per_student"]
+  exclude_outlier_flag: "outlier_consensus"
+
+# --- Modeling tournament (mirrors Step 5 exactly) ---------------------------
+modeling:
+  cv_splits: 5
+  champion: "hist_gradient_boosting"
+  tuning_iter: 25
+  shap_sample: 1500
